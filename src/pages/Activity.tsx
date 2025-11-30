@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Activity as ActivityIcon, TrendingUp, UserPlus, Receipt } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { activityService } from '../services/firebase-service';
+import { activityService } from '../services/nosql-service';
 import type { ActivityLog } from '../types';
 import { formatRelativeTime } from '../utils/date';
 import { formatIndianCurrency } from '../utils/currency';
@@ -15,6 +15,7 @@ export default function Activity() {
     if (user) {
       loadActivities();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const loadActivities = async () => {
@@ -41,7 +42,7 @@ export default function Activity() {
   };
 
   const getActivityMessage = (activity: ActivityLog) => {
-    const details = activity.details as any;
+    const details = activity.details as { description?: string; amount?: number; groupName?: string };
 
     switch (activity.action) {
       case 'expense_added':

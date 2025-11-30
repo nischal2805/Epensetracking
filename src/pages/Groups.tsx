@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Users, Plus, ChevronRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { groupService } from '../services/supabase-service';
+import { groupService } from '../services/database-service';
 import type { Group } from '../types';
 import { formatRelativeTime } from '../utils/date';
 
@@ -19,6 +19,7 @@ export default function Groups({ onSelectGroup, onCreateGroup }: GroupsProps) {
     if (user) {
       loadGroups();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const loadGroups = async () => {

@@ -1,0 +1,119 @@
+// ============================================================================
+// FIRESTORE SECURITY RULES
+// ============================================================================
+// 
+// Copy these rules to Firebase Console > Firestore > Rules
+// 
+// These rules implement Row-Level Security (RLS) similar to PostgreSQL RLS
+// ============================================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ========================================================================
+    // HELPER FUNCTIONS
+    // ========================================================================
+    
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Check if the authenticated user matches the document owner
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Check if user is a member of a group
+    function isMember(groupId) {
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid));
+    }
+    
+    // Check if user is admin of a group
+    function isGroupAdmin(groupId) {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // ========================================================================
+    // USERS COLLECTION
+    // ========================================================================
+    // Users can only read/write their own profile
+    
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId);
+      allow update, delete: if isOwner(userId);
+    }
+    
+    // ========================================================================
+    // GROUPS COLLECTION
+    // ========================================================================
+    // Group members can read, admins can update/delete
+    
+    match /groups/{groupId} {
+      allow read: if isMember(groupId);
+      allow create: if isAuthenticated();
+      allow update: if isGroupAdmin(groupId);
+      allow delete: if isGroupAdmin(groupId);
+      
+      // Group members subcollection
+      match /members/{memberId} {
+        allow read: if isMember(groupId);
+        allow create: if isGroupAdmin(groupId) || 
+          (isAuthenticated() && memberId == request.auth.uid);
+        allow delete: if isGroupAdmin(groupId) || isOwner(memberId);
+      }
+    }
+    
+    // ========================================================================
+    // EXPENSES COLLECTION
+    // ========================================================================
+    // Group members can read/create, payer or creator can update/delete
+    
+    match /expenses/{expenseId} {
+      allow read: if isMember(resource.data.group_id);
+      allow create: if isMember(request.resource.data.group_id);
+      allow update, delete: if isMember(resource.data.group_id) && 
+        (resource.data.paid_by == request.auth.uid || resource.data.created_by == request.auth.uid);
+      
+      // Expense splits subcollection
+      match /splits/{splitId} {
+        allow read: if isMember(get(/databases/$(database)/documents/expenses/$(expenseId)).data.group_id);
+        allow write: if isMember(get(/databases/$(database)/documents/expenses/$(expenseId)).data.group_id);
+      }
+    }
+    
+    // ========================================================================
+    // ACTIVITIES COLLECTION
+    // ========================================================================
+    // Group members can read, any authenticated user can create
+    
+    match /activities/{activityId} {
+      allow read: if isMember(resource.data.group_id) || isOwner(resource.data.user_id);
+      allow create: if isAuthenticated();
+    }
+    
+    // ========================================================================
+    // RECEIPTS COLLECTION
+    // ========================================================================
+    // Owner can read/write their receipts
+    
+    match /receipts/{receiptId} {
+      allow read: if isOwner(resource.data.user_id);
+      allow create: if isAuthenticated();
+      allow update, delete: if isOwner(resource.data.user_id);
+    }
+    
+    // ========================================================================
+    // NLP CACHE COLLECTION
+    // ========================================================================
+    // Any authenticated user can read/write (shared cache)
+    
+    match /nlp_cache/{cacheId} {
+      allow read, write: if isAuthenticated();
+    }
+  }
+}

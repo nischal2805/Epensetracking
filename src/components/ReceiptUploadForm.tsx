@@ -1,18 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
 import { Camera, Upload, Loader2, Check } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { groupService, expenseService } from '../services/supabase-service';
-import { activityService, receiptService, simulateOCR } from '../services/firebase-service';
+import { groupService, expenseService } from '../services/database-service';
+import { activityService, receiptService, simulateOCR } from '../services/nosql-service';
 import type { GroupMember, ExpenseCategory } from '../types';
 import { formatIndianCurrency } from '../utils/currency';
 
 interface ReceiptUploadFormProps {
   groupId: string | null;
   onSuccess: () => void;
-  onCancel: () => void;
+  onCancel?: () => void;
 }
 
-export default function ReceiptUploadForm({ groupId, onSuccess, onCancel }: ReceiptUploadFormProps) {
+export default function ReceiptUploadForm({ groupId, onSuccess }: ReceiptUploadFormProps) {
   const { user } = useAuth();
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [file, setFile] = useState<File | null>(null);
@@ -30,12 +30,6 @@ export default function ReceiptUploadForm({ groupId, onSuccess, onCancel }: Rece
 
   const categories: ExpenseCategory[] = ['Food', 'Entertainment', 'Travel', 'Shopping', 'Bills', 'Other'];
 
-  useEffect(() => {
-    if (groupId) {
-      loadMembers();
-    }
-  }, [groupId]);
-
   const loadMembers = async () => {
     if (!groupId) return;
     try {
@@ -45,6 +39,13 @@ export default function ReceiptUploadForm({ groupId, onSuccess, onCancel }: Rece
       console.error('Error loading members:', error);
     }
   };
+
+  useEffect(() => {
+    if (groupId) {
+      loadMembers();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groupId]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -68,7 +69,7 @@ export default function ReceiptUploadForm({ groupId, onSuccess, onCancel }: Rece
     try {
       const data = await simulateOCR(selectedFile);
       setExtractedData(data);
-    } catch (err) {
+    } catch {
       setError('Failed to process receipt');
     } finally {
       setProcessing(false);
@@ -122,8 +123,8 @@ export default function ReceiptUploadForm({ groupId, onSuccess, onCancel }: Rece
       );
 
       onSuccess();
-    } catch (err: any) {
-      setError(err.message || 'Failed to add expense');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to add expense');
     } finally {
       setLoading(false);
     }

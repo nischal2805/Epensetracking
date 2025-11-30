@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Users, Plus, Receipt, TrendingUp, TrendingDown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { groupService, expenseService } from '../services/supabase-service';
+import { groupService, expenseService } from '../services/database-service';
 import type { Group, Expense, GroupMember, UserBalance, SimplifiedBalance } from '../types';
 import { formatIndianCurrency } from '../utils/currency';
 import { formatIndianDate } from '../utils/date';
@@ -23,6 +23,7 @@ export default function GroupDetail({ groupId, onBack, onAddExpense }: GroupDeta
 
   useEffect(() => {
     loadGroupData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groupId]);
 
   const loadGroupData = async () => {

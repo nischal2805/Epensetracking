@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { groupService } from '../services/supabase-service';
-import { activityService } from '../services/firebase-service';
+import { groupService } from '../services/database-service';
+import { activityService } from '../services/nosql-service';
 
 interface CreateGroupModalProps {
   onClose: () => void;
@@ -33,8 +33,8 @@ export default function CreateGroupModal({ onClose, onSuccess }: CreateGroupModa
       );
 
       onSuccess();
-    } catch (err: any) {
-      setError(err.message || 'Failed to create group');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to create group');
     } finally {
       setLoading(false);
     }

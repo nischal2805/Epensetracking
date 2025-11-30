@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Sparkles, Check } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { groupService, expenseService } from '../services/supabase-service';
-import { activityService, nlpCacheService } from '../services/firebase-service';
+import { groupService, expenseService } from '../services/database-service';
+import { activityService, nlpCacheService } from '../services/nosql-service';
 import { parseNLPInput, calculateConfidence } from '../utils/nlp-parser';
 import type { GroupMember, NLPParsedResult } from '../types';
 import { formatIndianCurrency } from '../utils/currency';
@@ -26,6 +26,7 @@ export default function NLPExpenseForm({ groupId, onSuccess, onCancel }: NLPExpe
     if (groupId) {
       loadMembers();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groupId]);
 
   const loadMembers = async () => {
@@ -89,8 +90,8 @@ export default function NLPExpenseForm({ groupId, onSuccess, onCancel }: NLPExpe
       );
 
       onSuccess();
-    } catch (err: any) {
-      setError(err.message || 'Failed to add expense');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to add expense');
     } finally {
       setLoading(false);
     }

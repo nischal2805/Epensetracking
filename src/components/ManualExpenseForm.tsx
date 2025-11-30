@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { groupService, expenseService } from '../services/supabase-service';
-import { activityService } from '../services/firebase-service';
+import { groupService, expenseService } from '../services/database-service';
+import { activityService } from '../services/nosql-service';
 import type { GroupMember, ExpenseCategory } from '../types';
 
 interface ManualExpenseFormProps {
@@ -30,6 +30,7 @@ export default function ManualExpenseForm({ groupId, onSuccess, onCancel }: Manu
       loadMembers();
       setPaidBy(user.id);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groupId, user]);
 
   const loadMembers = async () => {
@@ -111,8 +112,8 @@ export default function ManualExpenseForm({ groupId, onSuccess, onCancel }: Manu
       );
 
       onSuccess();
-    } catch (err: any) {
-      setError(err.message || 'Failed to add expense');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to add expense');
     } finally {
       setLoading(false);
     }
