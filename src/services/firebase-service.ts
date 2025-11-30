@@ -120,7 +120,7 @@ export const activityService = {
 export const nlpCacheService = {
   async cacheNLPResult(
     inputText: string,
-    parsedResult: any,
+    parsedResult: NLPCache['parsedResult'],
     confidence: number
   ): Promise<void> {
     await addDoc(collection(db, 'nlpCache'), {
@@ -151,7 +151,7 @@ export const nlpCacheService = {
   }
 };
 
-export const simulateOCR = async (file: File): Promise<{ amount: number; merchant: string; date: string }> => {
+export const simulateOCR = async (): Promise<{ amount: number; merchant: string; date: string }> => {
   await new Promise(resolve => setTimeout(resolve, 2000));
 
   const indianMerchants = [

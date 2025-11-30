@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Users, Plus, ChevronRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { groupService } from '../services/supabase-service';
@@ -15,23 +15,24 @@ export default function Groups({ onSelectGroup, onCreateGroup }: GroupsProps) {
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (user) {
-      loadGroups();
-    }
-  }, [user]);
-
-  const loadGroups = async () => {
+  const loadGroups = useCallback(async () => {
+    if (!user) return;
     try {
       setLoading(true);
-      const data = await groupService.getUserGroups(user!.id);
+      const data = await groupService.getUserGroups(user.id);
       setGroups(data);
     } catch (error) {
       console.error('Error loading groups:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      loadGroups();
+    }
+  }, [user, loadGroups]);
 
   if (loading) {
     return (

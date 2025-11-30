@@ -33,8 +33,9 @@ export default function CreateGroupModal({ onClose, onSuccess }: CreateGroupModa
       );
 
       onSuccess();
-    } catch (err: any) {
-      setError(err.message || 'Failed to create group');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create group';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

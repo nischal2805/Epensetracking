@@ -63,7 +63,7 @@ export default function AddExpense({ groupId, onBack, onSuccess }: AddExpensePro
           <NLPExpenseForm groupId={groupId} onSuccess={onSuccess} onCancel={onBack} />
         )}
         {inputMethod === 'receipt' && (
-          <ReceiptUploadForm groupId={groupId} onSuccess={onSuccess} onCancel={onBack} />
+          <ReceiptUploadForm groupId={groupId} onSuccess={onSuccess} />
         )}
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ArrowLeft, Users, Plus, Receipt, TrendingUp, TrendingDown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { groupService, expenseService } from '../services/supabase-service';
@@ -21,11 +21,42 @@ export default function GroupDetail({ groupId, onBack, onAddExpense }: GroupDeta
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'expenses' | 'balances'>('expenses');
 
-  useEffect(() => {
-    loadGroupData();
-  }, [groupId]);
+  const calculateSimplifiedBalances = useCallback((
+    rawBalances: UserBalance[],
+    allMembers: GroupMember[],
+    currentUserId: string
+  ): SimplifiedBalance[] => {
+    const netBalances: { [userId: string]: number } = {};
 
-  const loadGroupData = async () => {
+    allMembers.forEach(m => {
+      if (m.user_id !== currentUserId) {
+        netBalances[m.user_id] = 0;
+      }
+    });
+
+    rawBalances.forEach(b => {
+      if (b.from_user === currentUserId) {
+        netBalances[b.to_user] = (netBalances[b.to_user] || 0) + b.owes;
+      } else if (b.to_user === currentUserId) {
+        netBalances[b.from_user] = (netBalances[b.from_user] || 0) - b.owes;
+      }
+    });
+
+    return Object.entries(netBalances)
+      .filter(([, amount]) => Math.abs(amount) > 0.01)
+      .map(([userId, amount]) => {
+        const member = allMembers.find(m => m.user_id === userId);
+        return {
+          user_id: userId,
+          user_name: member?.user?.name || 'Unknown',
+          net_amount: amount,
+        };
+      })
+      .sort((a, b) => b.net_amount - a.net_amount);
+  }, []);
+
+  const loadGroupData = useCallback(async () => {
+    if (!user) return;
     try {
       setLoading(true);
       const [groupData, membersData, expensesData, balancesData] = await Promise.all([
@@ -38,48 +69,17 @@ export default function GroupDetail({ groupId, onBack, onAddExpense }: GroupDeta
       setGroup(groupData);
       setMembers(membersData);
       setExpenses(expensesData);
-      setBalances(calculateSimplifiedBalances(balancesData, membersData, user!.id));
+      setBalances(calculateSimplifiedBalances(balancesData, membersData, user.id));
     } catch (error) {
       console.error('Error loading group data:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [groupId, user, calculateSimplifiedBalances]);
 
-  const calculateSimplifiedBalances = (
-    rawBalances: UserBalance[],
-    members: GroupMember[],
-    currentUserId: string
-  ): SimplifiedBalance[] => {
-    const userBalances = new Map<string, number>();
-
-    members.forEach(m => {
-      if (m.user_id !== currentUserId) {
-        userBalances.set(m.user_id, 0);
-      }
-    });
-
-    rawBalances.forEach(balance => {
-      if (balance.from_user === currentUserId) {
-        const current = userBalances.get(balance.to_user) || 0;
-        userBalances.set(balance.to_user, current + balance.owes);
-      } else if (balance.to_user === currentUserId) {
-        const current = userBalances.get(balance.from_user) || 0;
-        userBalances.set(balance.from_user, current - balance.owes);
-      }
-    });
-
-    return Array.from(userBalances.entries())
-      .map(([userId, amount]) => {
-        const member = members.find(m => m.user_id === userId);
-        return {
-          user_id: userId,
-          user_name: member?.user?.name || 'Unknown',
-          net_amount: amount,
-        };
-      })
-      .filter(b => Math.abs(b.net_amount) > 0.01);
-  };
+  useEffect(() => {
+    loadGroupData();
+  }, [loadGroupData]);
 
   if (loading || !group) {
     return (

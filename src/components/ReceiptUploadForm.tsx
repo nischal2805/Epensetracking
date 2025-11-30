@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Camera, Upload, Loader2, Check } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { groupService, expenseService } from '../services/supabase-service';
@@ -9,10 +9,9 @@ import { formatIndianCurrency } from '../utils/currency';
 interface ReceiptUploadFormProps {
   groupId: string | null;
   onSuccess: () => void;
-  onCancel: () => void;
 }
 
-export default function ReceiptUploadForm({ groupId, onSuccess, onCancel }: ReceiptUploadFormProps) {
+export default function ReceiptUploadForm({ groupId, onSuccess }: ReceiptUploadFormProps) {
   const { user } = useAuth();
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [file, setFile] = useState<File | null>(null);
@@ -30,13 +29,7 @@ export default function ReceiptUploadForm({ groupId, onSuccess, onCancel }: Rece
 
   const categories: ExpenseCategory[] = ['Food', 'Entertainment', 'Travel', 'Shopping', 'Bills', 'Other'];
 
-  useEffect(() => {
-    if (groupId) {
-      loadMembers();
-    }
-  }, [groupId]);
-
-  const loadMembers = async () => {
+  const loadMembers = useCallback(async () => {
     if (!groupId) return;
     try {
       const data = await groupService.getGroupMembers(groupId);
@@ -44,7 +37,13 @@ export default function ReceiptUploadForm({ groupId, onSuccess, onCancel }: Rece
     } catch (error) {
       console.error('Error loading members:', error);
     }
-  };
+  }, [groupId]);
+
+  useEffect(() => {
+    if (groupId) {
+      loadMembers();
+    }
+  }, [groupId, loadMembers]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -66,9 +65,9 @@ export default function ReceiptUploadForm({ groupId, onSuccess, onCancel }: Rece
 
     setProcessing(true);
     try {
-      const data = await simulateOCR(selectedFile);
+      const data = await simulateOCR();
       setExtractedData(data);
-    } catch (err) {
+    } catch {
       setError('Failed to process receipt');
     } finally {
       setProcessing(false);
@@ -122,8 +121,9 @@ export default function ReceiptUploadForm({ groupId, onSuccess, onCancel }: Rece
       );
 
       onSuccess();
-    } catch (err: any) {
-      setError(err.message || 'Failed to add expense');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to add expense';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { groupService, expenseService } from '../services/supabase-service';
 import { activityService } from '../services/firebase-service';
@@ -25,14 +25,7 @@ export default function ManualExpenseForm({ groupId, onSuccess, onCancel }: Manu
 
   const categories: ExpenseCategory[] = ['Food', 'Entertainment', 'Travel', 'Shopping', 'Bills', 'Other'];
 
-  useEffect(() => {
-    if (groupId && user) {
-      loadMembers();
-      setPaidBy(user.id);
-    }
-  }, [groupId, user]);
-
-  const loadMembers = async () => {
+  const loadMembers = useCallback(async () => {
     if (!groupId) return;
     try {
       const data = await groupService.getGroupMembers(groupId);
@@ -46,7 +39,14 @@ export default function ManualExpenseForm({ groupId, onSuccess, onCancel }: Manu
     } catch (error) {
       console.error('Error loading members:', error);
     }
-  };
+  }, [groupId]);
+
+  useEffect(() => {
+    if (groupId && user) {
+      loadMembers();
+      setPaidBy(user.id);
+    }
+  }, [groupId, user, loadMembers]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,8 +111,9 @@ export default function ManualExpenseForm({ groupId, onSuccess, onCancel }: Manu
       );
 
       onSuccess();
-    } catch (err: any) {
-      setError(err.message || 'Failed to add expense');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to add expense';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
