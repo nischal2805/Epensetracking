@@ -170,7 +170,14 @@ export default function Insights() {
                         {formatIndianCurrency(cat.amount)} ({cat.percentage}%)
                       </span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="w-full bg-gray-200 rounded-full h-2"
+                      role="progressbar"
+                      aria-valuenow={cat.percentage}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-label={`${cat.category} spending: ${cat.percentage}%`}
+                    >
                       <div 
                         className="bg-emerald-500 h-2 rounded-full transition-all duration-300"
                         style={{ width: `${cat.percentage}%` }}

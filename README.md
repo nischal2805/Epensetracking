@@ -2,7 +2,7 @@
 
 A mobile-first expense sharing application built with **hybrid database architecture** combining SQL (Supabase) and NoSQL (Firebase) for optimal performance and flexibility.
 
-## Features
+## 🚀 Features
 
 ### Core Functionality
 - **Group Management**: Create and manage expense sharing groups
@@ -14,6 +14,12 @@ A mobile-first expense sharing application built with **hybrid database architec
 - **Activity Feed**: Real-time logging of all actions
 - **Indian Localization**: Rupee formatting with lakhs/crores notation
 
+### 🤖 AI-Powered Features
+- **Smart Categorization**: AI-powered expense categorization using NLP
+- **Spending Insights**: Intelligent spending pattern recognition
+- **Personalized Recommendations**: AI-generated savings tips
+- **Trend Analysis**: Automatic detection of spending trends
+
 ### Technical Highlights
 - **Hybrid Database Architecture**:
   - Supabase PostgreSQL for structured data (users, groups, expenses, splits)
@@ -22,9 +28,19 @@ A mobile-first expense sharing application built with **hybrid database architec
 - **Mobile-First Design**: Optimized for 375px-428px viewports
 - **Bottom Navigation**: Native app-like experience
 - **Row Level Security**: Supabase RLS for data protection
-- **Real-time Sync**: Automatic synchronization between databases
+- **TypeScript**: Full type safety across the stack
 
-## Tech Stack
+## 📚 Documentation
+
+| Document | Description |
+|----------|-------------|
+| [DATABASE_DOCUMENTATION.md](DATABASE_DOCUMENTATION.md) | Complete database schema, normalization analysis, and ER diagrams |
+| [TEACHER_GUIDE.md](TEACHER_GUIDE.md) | Evaluation criteria, demo guide, and viva questions |
+| [FIREBASE_SETUP.md](FIREBASE_SETUP.md) | Step-by-step Firebase configuration |
+| [QUICKSTART.md](QUICKSTART.md) | Quick start guide for testing |
+| [.env.example](.env.example) | Environment variables template |
+
+## 🛠️ Tech Stack
 
 - **Frontend**: React 18 + TypeScript + Vite
 - **Styling**: Tailwind CSS
@@ -33,7 +49,7 @@ A mobile-first expense sharing application built with **hybrid database architec
 - **NoSQL Database**: Firebase (Firestore + Storage)
 - **Authentication**: Supabase Auth
 
-## Database Schema
+## 📊 Database Schema
 
 ### Supabase (SQL)
 ```sql
@@ -52,21 +68,31 @@ activityLogs: { userId, groupId, action, details, timestamp }
 nlpCache: { inputText, parsedResult, confidence, timestamp }
 ```
 
-## Setup Instructions
+See [DATABASE_DOCUMENTATION.md](DATABASE_DOCUMENTATION.md) for complete schema details and normalization analysis.
+
+## ⚡ Setup Instructions
 
 ### Prerequisites
 - Node.js 18+
-- Supabase account (already configured)
-- Firebase account (for production deployment)
+- Supabase account
+- Firebase account
 
 ### Installation
 
-1. Install dependencies:
+1. Clone and install dependencies:
 ```bash
+git clone <repository-url>
+cd Epensetracking
 npm install
 ```
 
-2. Environment variables are already configured in `.env`:
+2. Copy environment template and configure:
+```bash
+cp .env.example .env
+# Edit .env with your Supabase and Firebase credentials
+```
+
+3. See [.env.example](.env.example) for all required environment variables:
 ```
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_anon_key
@@ -75,11 +101,10 @@ VITE_FIREBASE_PROJECT_ID=your_project_id
 VITE_FIREBASE_STORAGE_BUCKET=your_bucket
 ```
 
-3. Database migrations are already applied to Supabase
-
 4. Start development server:
 ```bash
 npm run dev
+```
 ```
 
 ## Usage Guide

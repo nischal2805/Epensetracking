@@ -13,6 +13,22 @@
 import type { Expense, ExpenseCategory } from '../types';
 
 // ============================================
+// CONSTANTS
+// ============================================
+
+/** Maximum score used as divisor for confidence calculation */
+const MAX_SCORE_DIVISOR = 10;
+
+/** Threshold for determining spending trend (10% of total) */
+const TREND_THRESHOLD = 0.1;
+
+/** Threshold for identifying small expenses relative to average */
+const SMALL_EXPENSE_THRESHOLD = 0.3;
+
+/** Threshold for frequency of small expenses */
+const SMALL_EXPENSE_FREQUENCY_THRESHOLD = 0.5;
+
+// ============================================
 // SMART CATEGORIZATION
 // ============================================
 
@@ -120,7 +136,7 @@ export function smartCategorize(description: string): {
   }
   
   // Calculate confidence (0-100)
-  const confidence = Math.min(100, Math.round((bestMatch.score / 10) * 100));
+  const confidence = Math.min(100, Math.round((bestMatch.score / MAX_SCORE_DIVISOR) * 100));
   
   return {
     category: bestMatch.category,
@@ -137,6 +153,7 @@ export interface SpendingInsight {
   type: 'info' | 'warning' | 'success' | 'tip';
   title: string;
   description: string;
+  /** Emoji icon for the insight (e.g., '📊', '⚠️', '💰') */
   icon: string;
 }
 
@@ -219,8 +236,8 @@ export function generateSpendingInsights(expenses: Expense[]): SpendingAnalytics
   const secondHalfTotal = secondHalf.reduce((sum, e) => sum + e.amount, 0);
   const trendDiff = secondHalfTotal - firstHalfTotal;
   const weeklyTrend: 'increasing' | 'decreasing' | 'stable' = 
-    trendDiff > totalSpent * 0.1 ? 'increasing' :
-    trendDiff < -totalSpent * 0.1 ? 'decreasing' : 'stable';
+    trendDiff > totalSpent * TREND_THRESHOLD ? 'increasing' :
+    trendDiff < -totalSpent * TREND_THRESHOLD ? 'decreasing' : 'stable';
   
   // Generate insights
   const insights: SpendingInsight[] = [];
@@ -273,8 +290,8 @@ export function generateSpendingInsights(expenses: Expense[]): SpendingAnalytics
   }
   
   // Insight: Frequent small expenses
-  const smallExpenses = expenses.filter(e => e.amount < averageExpense * 0.3);
-  if (smallExpenses.length > expenses.length * 0.5) {
+  const smallExpenses = expenses.filter(e => e.amount < averageExpense * SMALL_EXPENSE_THRESHOLD);
+  if (smallExpenses.length > expenses.length * SMALL_EXPENSE_FREQUENCY_THRESHOLD) {
     insights.push({
       type: 'tip',
       title: 'Many Small Expenses',
