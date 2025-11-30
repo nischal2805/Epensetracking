@@ -1,4 +1,4 @@
-import { Users, PlusCircle, Activity, User } from 'lucide-react';
+import { Users, PlusCircle, Activity, User, Sparkles } from 'lucide-react';
 
 interface BottomNavProps {
   activeTab: string;
@@ -9,6 +9,7 @@ export default function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
   const tabs = [
     { id: 'groups', label: 'Groups', icon: Users },
     { id: 'add', label: 'Add', icon: PlusCircle },
+    { id: 'insights', label: 'AI Insights', icon: Sparkles },
     { id: 'activity', label: 'Activity', icon: Activity },
     { id: 'profile', label: 'Profile', icon: User },
   ];
