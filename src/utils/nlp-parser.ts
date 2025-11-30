@@ -85,7 +85,7 @@ function categorizeExpense(text: string): ExpenseCategory {
 
 function extractDate(text: string): string {
   const datePatterns = [
-    /(?:on|dated?)\s+(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i,
+    /(?:on|dated?)\s+(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/i,
     /(yesterday|today|last\s+(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday))/i,
   ];
 

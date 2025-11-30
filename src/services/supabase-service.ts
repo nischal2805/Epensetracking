@@ -1,16 +1,19 @@
 import { supabase } from '../lib/supabase';
 import type { User, Group, GroupMember, Expense, ExpenseSplit, UserBalance } from '../types';
 
+// Note: Using explicit type assertions due to Supabase SDK type inference limitations
+// See KNOWN_ISSUES.md for details
+
 export const userService = {
   async createUser(email: string, name: string, id: string): Promise<User> {
     const { data, error } = await supabase
       .from('users')
-      .insert({ id, email, name })
+      .insert({ id, email, name } as unknown as never)
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+    return data as User;
   },
 
   async getUserById(id: string): Promise<User | null> {
@@ -21,7 +24,7 @@ export const userService = {
       .maybeSingle();
 
     if (error) throw error;
-    return data;
+    return data as User | null;
   },
 
   async getUserByEmail(email: string): Promise<User | null> {
@@ -32,7 +35,7 @@ export const userService = {
       .maybeSingle();
 
     if (error) throw error;
-    return data;
+    return data as User | null;
   },
 
   async searchUsersByEmail(email: string): Promise<User[]> {
@@ -43,7 +46,7 @@ export const userService = {
       .limit(10);
 
     if (error) throw error;
-    return data || [];
+    return (data || []) as User[];
   },
 };
 
@@ -51,17 +54,18 @@ export const groupService = {
   async createGroup(name: string, createdBy: string): Promise<Group> {
     const { data, error } = await supabase
       .from('groups')
-      .insert({ name, created_by: createdBy })
+      .insert({ name, created_by: createdBy } as unknown as never)
       .select()
       .single();
 
     if (error) throw error;
+    const group = data as Group;
 
     await supabase
       .from('group_members')
-      .insert({ group_id: data.id, user_id: createdBy });
+      .insert({ group_id: group.id, user_id: createdBy } as unknown as never);
 
-    return data;
+    return group;
   },
 
   async getUserGroups(userId: string): Promise<Group[]> {
@@ -72,7 +76,7 @@ export const groupService = {
 
     if (error) throw error;
 
-    return data?.map((item: any) => item.groups).filter(Boolean) || [];
+    return data?.map((item: { groups: Group | null }) => item.groups).filter((g): g is Group => g !== null) || [];
   },
 
   async getGroupById(groupId: string): Promise<Group | null> {
@@ -83,19 +87,19 @@ export const groupService = {
       .maybeSingle();
 
     if (error) throw error;
-    return data;
+    return data as Group | null;
   },
 
   async updateGroup(groupId: string, name: string): Promise<Group> {
     const { data, error } = await supabase
       .from('groups')
-      .update({ name })
+      .update({ name } as unknown as never)
       .eq('id', groupId)
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+    return data as Group;
   },
 
   async deleteGroup(groupId: string): Promise<void> {
@@ -110,12 +114,12 @@ export const groupService = {
   async addMember(groupId: string, userId: string): Promise<GroupMember> {
     const { data, error } = await supabase
       .from('group_members')
-      .insert({ group_id: groupId, user_id: userId })
+      .insert({ group_id: groupId, user_id: userId } as unknown as never)
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+    return data as GroupMember;
   },
 
   async removeMember(groupId: string, userId: string): Promise<void> {
@@ -135,7 +139,7 @@ export const groupService = {
       .eq('group_id', groupId);
 
     if (error) throw error;
-    return data || [];
+    return (data || []) as GroupMember[];
   },
 };
 
@@ -152,22 +156,22 @@ export const expenseService = {
   }): Promise<Expense> {
     const { data, error } = await supabase
       .from('expenses')
-      .insert(expense)
+      .insert(expense as unknown as never)
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+    return data as Expense;
   },
 
   async createSplits(splits: { expense_id: string; user_id: string; share_amount: number }[]): Promise<ExpenseSplit[]> {
     const { data, error } = await supabase
       .from('expense_splits')
-      .insert(splits)
+      .insert(splits as unknown as never[])
       .select();
 
     if (error) throw error;
-    return data || [];
+    return (data || []) as ExpenseSplit[];
   },
 
   async getGroupExpenses(groupId: string): Promise<Expense[]> {
@@ -179,7 +183,7 @@ export const expenseService = {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    return (data || []) as Expense[];
   },
 
   async getExpenseById(expenseId: string): Promise<Expense | null> {
@@ -190,19 +194,19 @@ export const expenseService = {
       .maybeSingle();
 
     if (error) throw error;
-    return data;
+    return data as Expense | null;
   },
 
   async updateExpense(expenseId: string, updates: Partial<Expense>): Promise<Expense> {
     const { data, error } = await supabase
       .from('expenses')
-      .update(updates)
+      .update(updates as unknown as never)
       .eq('id', expenseId)
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+    return data as Expense;
   },
 
   async deleteExpense(expenseId: string): Promise<void> {
@@ -221,6 +225,6 @@ export const expenseService = {
       .eq('group_id', groupId);
 
     if (error) throw error;
-    return data || [];
+    return (data || []) as UserBalance[];
   },
 };

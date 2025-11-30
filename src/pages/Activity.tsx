@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Activity as ActivityIcon, TrendingUp, UserPlus, Receipt } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { activityService } from '../services/firebase-service';
@@ -6,28 +6,35 @@ import type { ActivityLog } from '../types';
 import { formatRelativeTime } from '../utils/date';
 import { formatIndianCurrency } from '../utils/currency';
 
+interface ActivityDetails {
+  description?: string;
+  amount?: number;
+  groupName?: string;
+}
+
 export default function Activity() {
   const { user } = useAuth();
   const [activities, setActivities] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (user) {
-      loadActivities();
-    }
-  }, [user]);
-
-  const loadActivities = async () => {
+  const loadActivities = useCallback(async () => {
+    if (!user) return;
     try {
       setLoading(true);
-      const data = await activityService.getUserActivity(user!.id, 50);
+      const data = await activityService.getUserActivity(user.id, 50);
       setActivities(data);
     } catch (error) {
       console.error('Error loading activities:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      loadActivities();
+    }
+  }, [user, loadActivities]);
 
   const getActivityIcon = (action: string) => {
     switch (action) {
@@ -41,14 +48,14 @@ export default function Activity() {
   };
 
   const getActivityMessage = (activity: ActivityLog) => {
-    const details = activity.details as any;
+    const details = activity.details as ActivityDetails;
 
     switch (activity.action) {
       case 'expense_added':
         return (
           <>
             Added expense <strong>{details.description}</strong> for{' '}
-            <strong>{formatIndianCurrency(details.amount)}</strong>
+            <strong>{formatIndianCurrency(details.amount || 0)}</strong>
           </>
         );
       case 'group_created':

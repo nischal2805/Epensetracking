@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Sparkles, Check } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { groupService, expenseService } from '../services/supabase-service';
@@ -22,13 +22,7 @@ export default function NLPExpenseForm({ groupId, onSuccess, onCancel }: NLPExpe
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    if (groupId) {
-      loadMembers();
-    }
-  }, [groupId]);
-
-  const loadMembers = async () => {
+  const loadMembers = useCallback(async () => {
     if (!groupId) return;
     try {
       const data = await groupService.getGroupMembers(groupId);
@@ -36,7 +30,13 @@ export default function NLPExpenseForm({ groupId, onSuccess, onCancel }: NLPExpe
     } catch (error) {
       console.error('Error loading members:', error);
     }
-  };
+  }, [groupId]);
+
+  useEffect(() => {
+    if (groupId) {
+      loadMembers();
+    }
+  }, [groupId, loadMembers]);
 
   const handleParse = async () => {
     if (!inputText.trim() || !user) return;
@@ -89,8 +89,9 @@ export default function NLPExpenseForm({ groupId, onSuccess, onCancel }: NLPExpe
       );
 
       onSuccess();
-    } catch (err: any) {
-      setError(err.message || 'Failed to add expense');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to add expense';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

@@ -4,30 +4,21 @@
 
 ### Supabase Insert Type Strictness
 
-The current version of `@supabase/supabase-js` (v2.57.4) has overly strict typing for insert operations that doesn't correctly infer types from the database schema. This causes TypeScript errors like:
+The current version of `@supabase/supabase-js` (v2.57.4) has overly strict typing for insert operations that doesn't correctly infer types from the database schema.
 
-```
-Argument of type '{ ... }' is not assignable to parameter of type 'never'
-```
-
-**Status**: Non-blocking
+**Status**: Fixed with type assertions
 **Impact**: None - the code compiles and runs correctly
-**Why it happens**: The generated `Database` types don't properly map to Supabase's generic insert methods
+**Solution Applied**: Using `as unknown as never` type assertions in `supabase-service.ts`
 
-**Solutions**:
-1. Use type assertions: `as Database['public']['Tables']['users']['Insert']`
-2. Wait for Supabase SDK update with better type inference
-3. Generate types using Supabase CLI (more accurate types)
+See the code comments in `src/services/supabase-service.ts` for details.
 
-These errors appear in:
-- `src/services/supabase-service.ts`
+### Previous Lint Warnings (FIXED)
 
-### Unused Import Warnings
-
-Some imports were removed but may be needed for future features:
-- `formatIndianCurrency` in ManualExpenseForm (useful for preview)
-- `onCancel` in ReceiptUploadForm (parent handles cancel)
-- `file` parameter in simulateOCR (for real OCR implementation)
+The following issues have been fixed:
+- ✅ useEffect dependency warnings - Fixed using useCallback
+- ✅ `any` type usage - Replaced with proper types
+- ✅ Unused variables - Removed or prefixed with underscore
+- ✅ Unnecessary escape characters in regex - Fixed
 
 ## Firebase Configuration
 

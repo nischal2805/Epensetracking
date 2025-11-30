@@ -6,6 +6,7 @@ import Groups from './pages/Groups';
 import GroupDetail from './pages/GroupDetail';
 import AddExpense from './pages/AddExpense';
 import Activity from './pages/Activity';
+import Insights from './pages/Insights';
 import Profile from './pages/Profile';
 import BottomNav from './components/BottomNav';
 import CreateGroupModal from './components/CreateGroupModal';
@@ -92,6 +93,7 @@ function AppContent() {
         </div>
       )}
       {activeTab === 'activity' && <Activity />}
+      {activeTab === 'insights' && <Insights />}
       {activeTab === 'profile' && <Profile />}
 
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
